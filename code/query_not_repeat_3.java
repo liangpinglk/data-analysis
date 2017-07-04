@@ -1,0 +1,60 @@
+package liang_task;
+
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.StringTokenizer;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+public class query_not_repeat_3 {
+	public static int sum = 0;
+
+	public static class MyMapper extends Mapper<Object, Text, Text, Text> {
+
+		@Override
+		protected void map(Object key, Text value, Context context)
+				throws IOException, InterruptedException {
+			//String[] str = value.toString().split("\t");
+			context.write(value, new Text(""));
+
+		}
+
+	}
+
+	public static class MyReducer extends Reducer<Text, Text, Text, Text> {
+		@Override
+		protected void reduce(Text arg0, Iterable<Text> arg1, Context arg2)
+				throws IOException, InterruptedException {
+			sum=sum+1;
+			//arg2.write(arg0, new Text(""));
+		}
+
+	}
+
+	public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
+		System.out.println("query_not_repeat_3 begin");
+		Configuration conf = new Configuration();
+		conf.set("fs.defaultFS", "hdfs://192.168.23.9:9000");
+		Job job = Job.getInstance(conf, "query_not_repeat_3");
+		job.setMapperClass(MyMapper.class);
+		job.setReducerClass(MyReducer.class);
+		job.setOutputKeyClass(Text.class);
+		job.setOutputValueClass(Text.class);
+		job.setJarByClass(query_not_repeat_3.class);
+		FileInputFormat.addInputPath(job, new Path(args[0]));
+		FileOutputFormat.setOutputPath(job, new Path(args[1]));
+		job.waitForCompletion(true);
+		System.out.println("无重复总数：" + sum + "条");
+		System.out.println("count over");
+	}
+
+}
